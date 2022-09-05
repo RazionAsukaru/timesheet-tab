@@ -26,14 +26,13 @@ enum Record {
     styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit, AfterViewInit {
-    timsheetCsv: any;
     eksadFileWeek1!: File;
     eksadFileWeek2!: File;
 
     datePicker!: Datepicker;
     timesheet!: FormGroup;
 
-    csvRecords: any;
+    csvRecords: any = [];
     timesheetWb: Workbook | null = null;
 
     xlsxSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
@@ -81,6 +80,10 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     onDateChange({ detail }: any) {
         this.timesheet.get('month')?.setValue(detail.date);
+        const selectedMonth = (this.timesheet.get('month')?.value as Date).getMonth();
+        if (this.csvRecords.length && new Date(this.csvRecords[0][Record.startDate]).getMonth() == selectedMonth) {
+            this.loadXlsx(this.timesheet.get('week')?.value == 1 ? this.eksadFileWeek1 : this.eksadFileWeek2);
+        }
     }
 
     openFileExplorer() {
@@ -114,11 +117,14 @@ export class AppComponent implements OnInit, AfterViewInit {
                                 );
                             }
                             temp.forEach((d: any, idx: number) => {
+                                if (!!!this.timesheet.get('name')?.value) {
+                                    this.timesheet.get('name')?.setValue(d[Record.assignedTo].split(' <')[0]);
+                                }
                                 sheet.getCell(`D${rowIndex + idx}`).value = d[Record.title];
                                 sheet.getCell(`E${rowIndex + idx}`).value = d[Record.title];
                                 sheet.getCell(`F${rowIndex + idx}`).value = 2;
-                                sheet.getCell(`G${rowIndex + idx}`).value = d[Record.originalEstimate];
-                                sheet.getCell(`H${rowIndex + idx}`).value = d[Record.completedWork];
+                                sheet.getCell(`G${rowIndex + idx}`).value = +d[Record.originalEstimate];
+                                sheet.getCell(`H${rowIndex + idx}`).value = +d[Record.completedWork];
                                 sheet.getCell(`I${rowIndex + idx}`).value = 1;
                             });
                         }
@@ -153,13 +159,13 @@ export class AppComponent implements OnInit, AfterViewInit {
                 .subscribe({
                     next: (result: any): void => {
                         const selectedMonth = (this.timesheet.get('month')?.value as Date).getMonth();
+                        this.csvRecords = result;
                         if (new Date(result[0][Record.startDate]).getMonth() == selectedMonth) {
-                            this.csvRecords = result;
                             this.loadXlsx(
                                 this.timesheet.get('week')?.value == 1 ? this.eksadFileWeek1 : this.eksadFileWeek2
                             );
                         } else {
-                            console.error('Wrong Month!', new Date(result[0][Record.startDate]).getMonth(), selectedMonth);
+                            console.error('Wrong Month!');
                         }
                     },
                     error: (error: NgxCSVParserError): void => {

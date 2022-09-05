@@ -2,19 +2,24 @@
 <div class="flex justify-center">
     <form [formGroup]="timesheet" class="card w-[96%] p-10 bg-base-100 shadow-xl overflow-visible">
         <div class="card-body">
-            <label for="name" class="label mt-5">Name (In Eksad Timesheet):</label>
+            <label for="name" class="label label-text mt-5">Name (In Eksad Timesheet):</label>
             <input id="name" type="text" formControlName="name" class="input input-primary" />
+            <label for="name" class="label label-text-alt">Will use "Assigned To" as name from Azure Timesheet if left empty</label>
 
-            <label for="week" class="label mt-5">Week:</label>
-            <div class="flex">
-                <label class="flex-auto">
-                    <input type="radio" value="1" formControlName="week" />
-                    <span class="ml-2">Week 1-2</span>
-                </label>
-                <label class="flex-auto">
-                    <input type="radio" value="2" formControlName="week" />
-                    <span class="ml-2">Week 3-4</span>
-                </label>
+            <label for="week" class="label">Week:</label>
+            <div class="container grid grid-flow-row gap-4 sm:grid-cols-12">
+                <div class="col-span-6 ">
+                    <label class="label-text label cursor-pointer justify-start">
+                        <input type="radio" value="1" class="radio radio-primary" formControlName="week" />
+                        <span class="ml-2">Week 1 - 2</span>
+                    </label>
+                </div>
+                <div class="col-span-6 ">
+                    <label class="label-text label cursor-pointer justify-start">
+                        <input type="radio" value="2" class="radio radio-primary" formControlName="week" />
+                        <span class="ml-2">Week 3 - 4</span>
+                    </label>
+                </div>
             </div>
 
             <div class="container grid grid-flow-row gap-4 sm:grid-cols-12">
@@ -44,7 +49,7 @@
                 </div>
             </div>
 
-            <div class="card-actions mt-10">
+            <div class="card-actions mt-20">
                 <button
                     type="button"
                     class="btn btn-primary w-full"
