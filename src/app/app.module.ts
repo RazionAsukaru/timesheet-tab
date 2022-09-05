@@ -5,7 +5,7 @@ import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime-ex';
+import { NgxCsvParserModule } from 'ngx-csv-parser';
 
 @NgModule({
     declarations: [AppComponent],
@@ -14,8 +14,7 @@ import { OwlDateTimeModule, OwlNativeDateTimeModule } from 'ng-pick-datetime-ex'
         BrowserAnimationsModule,
         HttpClientModule,
         ReactiveFormsModule,
-        OwlDateTimeModule,
-        OwlNativeDateTimeModule,
+        NgxCsvParserModule
     ],
     providers: [],
     bootstrap: [AppComponent],

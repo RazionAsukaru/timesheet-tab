@@ -1,8 +1,95 @@
-/* You can add global styles to this file, and also import other style files */
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
-@import '~ng-pick-datetime-ex/assets/style/picker.min.css';
-
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/***
+ Copy the datepicker variables (the ones with `dp-` prefix and `!default` flag)
+ from `sass/Datepicker.scss` to here
+ Then, edit them using your framework's variables/values
+ e.g.:
+ $dp-background-color: $background !default;
+ $dp-border-color: $border !default;
+ ...
+ ***/
+
+@import '../node_modules/vanillajs-datepicker/sass/mixins';
+
+@mixin dp-button {
+    .button {
+        /***
+      Place style adjustment for date picker's buttons here, if needed
+      ***/
+
+        .datepicker-header & {
+            @include dp-header-button-common;
+
+            /***
+        Place style adjustment specific to the header buttons here, if needed
+        ***/
+        }
+
+        .datepicker-footer & {
+            @include dp-footer-button-common;
+
+            /***
+        Place style adjustment specific to the footer buttons here, if needed
+        ***/
+        }
+    }
+}
+.datepicker {
+    &-picker {
+        background-color: hsl(var(--b1) / var(--tw-bg-opacity)) !important;
+        border: 1px solid hsl(var(--p)) !important;
+        border-radius: 16px !important;
+        overflow: hidden !important ;
+    }
+    &-header {
+        padding: 10px 0;
+        background-color: hsl(var(--b1)) !important;
+    }
+    &-footer {
+        padding: 10px 0;
+        background-color: hsl(var(--b1)) !important;
+    }
+    &-cell:hover {
+        background-color: hsl(var(--p)/0.75) !important;
+    }
+    &-cell:active {
+        background-color: hsl(var(--p)/0.95) !important;
+    }
+    &-controls {
+        .view-switch:hover,
+        .next-btn:hover,
+        .prev-btn:hover,
+        .today-btn:hover,
+        .clear-btn:hover {
+            background-color: rgb(255 255 255 / 0.1) !important;
+        }
+        .view-switch:active,
+        .next-btn:active,
+        .prev-btn:active,
+        .today-btn:active,
+        .clear-btn:active {
+            background-color: hsl(var(--p) / 0.25) !important;
+        }
+        .view-switch,
+        .next-btn,
+        .prev-btn,
+        .today-btn,
+        .clear-btn {
+            padding: 5px 0;
+            background-color: hsl(var(--t)) !important;
+        }
+    }
+}
+
+.focused {
+    background-color: hsl(var(--p) / 0.5) !important;
+}
+
+@import '../node_modules/vanillajs-datepicker/sass/datepicker';
+

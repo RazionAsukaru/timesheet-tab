@@ -1,26 +1,59 @@
-<h1 class="card-title text-center w-[100vw] justify-center">Eksad TimeSheet</h1>
+<h1 class="card-title text-center w-[100vw] justify-center pt-20">Eksad TimeSheet - TAB</h1>
 <div class="flex justify-center">
-    <form [formGroup]="timesheet" class="card w-[96%] p-10 bg-base-100 shadow-xl">
-        <label for="name" class="label mt-5">Name (In Eksad Timesheet):</label>
-        <input id="name" type="text" formControlName="name" class="input input-primary" />
+    <form [formGroup]="timesheet" class="card w-[96%] p-10 bg-base-100 shadow-xl overflow-visible">
+        <div class="card-body">
+            <label for="name" class="label mt-5">Name (In Eksad Timesheet):</label>
+            <input id="name" type="text" formControlName="name" class="input input-primary" />
 
-        <label for="week" class="label mt-5">Week:</label>
-        <div class="flex">
-            <label class="flex-auto">
-                <input type="radio" value="1" formControlName="week" />
-                <span class="ml-2">Week 1</span>
-            </label>
-            <label class="flex-auto">
-                <input type="radio" value="2" formControlName="week" />
-                <span class="ml-2">Week 2</span>
-            </label>
+            <label for="week" class="label mt-5">Week:</label>
+            <div class="flex">
+                <label class="flex-auto">
+                    <input type="radio" value="1" formControlName="week" />
+                    <span class="ml-2">Week 1-2</span>
+                </label>
+                <label class="flex-auto">
+                    <input type="radio" value="2" formControlName="week" />
+                    <span class="ml-2">Week 3-4</span>
+                </label>
+            </div>
+
+            <div class="container grid grid-flow-row gap-4 sm:grid-cols-12">
+                <div class="col-span-6">
+                    <label for="datePicker" class="mt-5 label-text label">Month:</label>
+                    <input
+                        type="text"
+                        name="datePicker"
+                        (changeDate)="onDateChange($event)"
+                        #datePicker
+                        class="input w-full input-primary"
+                    />
+                </div>
+                <div class="col-span-6">
+                    <label class="mt-5 label-text label">Azure Timesheet:</label>
+                    <button type="button" class="btn btn-primary w-[200px]" (click)="openFileExplorer()">
+                        Choose File
+                    </button>
+                    <input
+                        hidden
+                        (change)="onFileSelected($event.target)"
+                        #uploadFile
+                        type="file"
+                        accept=".csv"
+                        id="file"
+                    />
+                </div>
+            </div>
+
+            <div class="card-actions mt-10">
+                <button
+                    type="button"
+                    class="btn btn-primary w-full"
+                    (click)="exportXlsx(timesheetWb)"
+                    [disabled]="!timesheetWb"
+                >
+                    Generate Time Sheet!
+                </button>
+            </div>
         </div>
-
-        <label class="label mt-5">Azure Timesheet:</label>
-        <button type="button" class="btn btn-primary" (click)="openFileExplorer()">Choose File</button>
-        <input hidden (change)="onFileSelected($event.target)" #uploadFile type="file" accept=".csv" id="file" />
-
-        <input [owlDateTime]="dt1" [owlDateTimeTrigger]="dt1" placeholder="Date Time"  />
-        <owl-date-time #dt1 [pickerType]="'calendar'" [startView]="'month'"></owl-date-time>
     </form>
 </div>
