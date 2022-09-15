@@ -72,8 +72,6 @@ export class AppComponent implements OnInit, AfterViewInit {
                     const found = workbook.worksheets.find((d: any) => d.name.includes('PM Tools 1'));
                     const sheet = workbook.getWorksheet(found ? found.id : 0);
 
-                    // Set Username
-                    this.username = sheet.getCell('C2').value?.toString() || '';
                     this.existingDate = sheet.getCell('B7').model.value as Date;
 
                     sheet.eachRow((row: Row, rowIndex) => {
@@ -88,6 +86,9 @@ export class AppComponent implements OnInit, AfterViewInit {
                                 );
                             }
                             temp.forEach((d: any, idx: number) => {
+                                if (!!!this.username) {
+                                    this.username = d[Record.assignedTo].split(' <')[0];
+                                }
                                 sheet.getCell(`D${rowIndex + idx}`).value = d[Record.title];
                                 sheet.getCell(`E${rowIndex + idx}`).value = d[Record.title];
                                 sheet.getCell(`F${rowIndex + idx}`).value = 2;
@@ -97,6 +98,8 @@ export class AppComponent implements OnInit, AfterViewInit {
                             });
                         }
                     });
+                    // Set Username
+                    sheet.getCell('C2').value = this.username;
                     this.timesheetWb = wb;
                 });
             };
