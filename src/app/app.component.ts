@@ -26,19 +26,22 @@ enum Record {
     styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit, AfterViewInit {
-    eksadFileWeek1!: File;
-    eksadFileWeek2!: File;
+    templateFile!: File;
 
     datePicker!: Datepicker;
-    timesheet!: FormGroup;
 
-    csvRecords: any = [];
+    csvRecords: any[] = [];
     timesheetWb: Workbook | null = null;
+
+    username: string = '';
+    existingDate: Date = new Date();
 
     xlsxSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
 
-    @ViewChild('uploadFile', { static: true, read: ElementRef })
-    uploadFileEl!: ElementRef;
+    @ViewChild('uploadTemplateFile', { static: true, read: ElementRef })
+    uploadTemplateFileEl!: ElementRef;
+    @ViewChild('uploadAzureFile', { static: true, read: ElementRef })
+    uploadAzureFileEl!: ElementRef;
     @ViewChild('datePicker') datePickerEl!: ElementRef;
 
     constructor(
@@ -47,47 +50,16 @@ export class AppComponent implements OnInit, AfterViewInit {
         private ngxCsvParser: NgxCsvParser
     ) {}
 
-    ngAfterViewInit(): void {
-        this.initiateDatePicker();
-        'Test'.toLowerCase;
+    ngAfterViewInit(): void {}
+
+    ngOnInit(): void {}
+
+    openTemplateFileExplorer() {
+        this.uploadTemplateFileEl.nativeElement.click();
     }
 
-    ngOnInit(): void {
-        this.timesheet = this.fb.group({
-            name: new FormControl('', Validators.required),
-            week: new FormControl('1', Validators.required),
-            month: new FormControl('', Validators.required),
-        });
-
-        this.readFileService.readFileFromLocal('week-1&2.xlsx').subscribe((data: Blob) => {
-            this.eksadFileWeek1 = new File([data], 'Eksad Timesheet');
-        });
-
-        this.readFileService.readFileFromLocal('week-3&4.xlsx').subscribe((data: Blob) => {
-            this.eksadFileWeek2 = new File([data], 'Eksad Timesheet');
-        });
-    }
-
-    initiateDatePicker() {
-        this.datePicker = new Datepicker(this.datePickerEl.nativeElement, {
-            autohide: true,
-            pickLevel: 1,
-            format: 'MM - yyyy',
-        });
-        this.datePicker.setDate([new Date()]);
-        this.timesheet.get('month')?.setValue(this.datePicker.getDate());
-    }
-
-    onDateChange({ detail }: any) {
-        this.timesheet.get('month')?.setValue(detail.date);
-        const selectedMonth = (this.timesheet.get('month')?.value as Date).getMonth();
-        if (this.csvRecords.length && new Date(this.csvRecords[0][Record.startDate]).getMonth() == selectedMonth) {
-            this.loadXlsx(this.timesheet.get('week')?.value == 1 ? this.eksadFileWeek1 : this.eksadFileWeek2);
-        }
-    }
-
-    openFileExplorer() {
-        this.uploadFileEl.nativeElement.click();
+    openAzureFileExplorer() {
+        this.uploadAzureFileEl.nativeElement.click();
     }
 
     async loadXlsx(file: File) {
@@ -100,10 +72,9 @@ export class AppComponent implements OnInit, AfterViewInit {
                     const found = workbook.worksheets.find((d: any) => d.name.includes('PM Tools 1'));
                     const sheet = workbook.getWorksheet(found ? found.id : 0);
 
-                    // Set Date
-                    const existingDate = sheet.getCell('B7').model.value as Date;
-                    const newDate = this.timesheet.get('month')?.value as Date;
-                    sheet.getCell('B7').model.value = new Date(existingDate.setMonth(newDate.getMonth()));
+                    // Set Username
+                    this.username = sheet.getCell('C2').value?.toString() || '';
+                    this.existingDate = sheet.getCell('B7').model.value as Date;
 
                     sheet.eachRow((row: Row, rowIndex) => {
                         if (rowIndex >= 7 && !!row?.model?.cells) {
@@ -117,9 +88,6 @@ export class AppComponent implements OnInit, AfterViewInit {
                                 );
                             }
                             temp.forEach((d: any, idx: number) => {
-                                if (!!!this.timesheet.get('name')?.value) {
-                                    this.timesheet.get('name')?.setValue(d[Record.assignedTo].split(' <')[0]);
-                                }
                                 sheet.getCell(`D${rowIndex + idx}`).value = d[Record.title];
                                 sheet.getCell(`E${rowIndex + idx}`).value = d[Record.title];
                                 sheet.getCell(`F${rowIndex + idx}`).value = 2;
@@ -144,34 +112,41 @@ export class AppComponent implements OnInit, AfterViewInit {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `PMtools - ${moment(this.timesheet.get('month')?.value).format('MMMM - yyyy')} - Week ${
-            this.timesheet.get('week')?.value === '1' ? '1 & 2' : '3 & 4'
-        } - ${this.timesheet.get('name')?.value}.xlsx`;
+        a.download = `PMtools - ${moment(this.existingDate).format('MMMM - yyyy')} - Week ${
+            this.existingDate.getDate() === 1 ? '1 & 2' : '3 & 4'
+        } - ${this.username}.xlsx`;
         a.click();
         a.remove();
     }
 
-    onFileSelected({ files }: any) {
+    onAzureFileSelected({ files }: any) {
         if (typeof FileReader !== 'undefined') {
             this.ngxCsvParser
                 .parse(files[0], { header: true, delimiter: ',', encoding: 'utf8' })
                 .pipe()
                 .subscribe({
                     next: (result: any): void => {
-                        const selectedMonth = (this.timesheet.get('month')?.value as Date).getMonth();
-                        this.csvRecords = result;
-                        if (new Date(result[0][Record.startDate]).getMonth() == selectedMonth) {
-                            this.loadXlsx(
-                                this.timesheet.get('week')?.value == 1 ? this.eksadFileWeek1 : this.eksadFileWeek2
-                            );
-                        } else {
-                            console.error('Wrong Month!');
+                        this.csvRecords = [...result];
+                        console.log(result);
+                        console.log(
+                            !!this.templateFile,
+                            this.csvRecords.length,
+                            !!this.templateFile && this.csvRecords.length
+                        );
+                        if (!!this.templateFile && this.csvRecords.length) {
+                            this.loadXlsx(this.templateFile);
                         }
                     },
                     error: (error: NgxCSVParserError): void => {
                         console.log('Error', error);
                     },
                 });
+        }
+    }
+    onTemplateFileSelected({ files }: any) {
+        this.templateFile = files[0];
+        if (!!this.templateFile && this.csvRecords.length) {
+            this.loadXlsx(this.templateFile);
         }
     }
 }

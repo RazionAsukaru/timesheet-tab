@@ -14,6 +14,7 @@ import { NgxCsvParserModule } from 'ngx-csv-parser';
         BrowserAnimationsModule,
         HttpClientModule,
         ReactiveFormsModule,
+        FormsModule,
         NgxCsvParserModule
     ],
     providers: [],

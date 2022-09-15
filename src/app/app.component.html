@@ -1,11 +1,13 @@
-<h1 class="card-title text-center w-[100vw] justify-center pt-20">Eksad TimeSheet - TAB</h1>
-<div class="flex justify-center">
-    <form [formGroup]="timesheet" class="card w-[96%] p-10 bg-base-100 shadow-xl overflow-visible">
+<div class="flex justify-center pt-[100px]">
+    <form class="card w-[96%] p-10 bg-base-200 shadow-xl overflow-visible">
+        <div class="card-title w-full flex justify-center items-center"><span>Weekly TimeSheet - TAB</span></div>
         <div class="card-body">
             <label for="name" class="label label-text mt-5">Name (In Eksad Timesheet):</label>
-            <input id="name" type="text" formControlName="name" class="input input-primary" />
-            <label for="name" class="label label-text-alt">Will use "Assigned To" as name from Azure Timesheet if left empty</label>
-
+            <input id="name" type="text" [(ngModel)]="username" class="input input-primary" />
+            <label for="name" class="label label-text-alt">
+                Will use "Assigned To" as name from Azure Timesheet if left empty
+            </label>
+            <!-- 
             <label for="week" class="label">Week:</label>
             <div class="container grid grid-flow-row gap-4 sm:grid-cols-12">
                 <div class="col-span-6 ">
@@ -20,10 +22,10 @@
                         <span class="ml-2">Week 3 - 4</span>
                     </label>
                 </div>
-            </div>
+            </div> -->
 
             <div class="container grid grid-flow-row gap-4 sm:grid-cols-12">
-                <div class="col-span-6">
+                <!-- <div class="col-span-6">
                     <label for="datePicker" class="mt-5 label-text label">Month:</label>
                     <input
                         type="text"
@@ -32,16 +34,30 @@
                         #datePicker
                         class="input w-full input-primary"
                     />
-                </div>
+                </div> -->
                 <div class="col-span-6">
-                    <label class="mt-5 label-text label">Azure Timesheet:</label>
-                    <button type="button" class="btn btn-primary w-[200px]" (click)="openFileExplorer()">
+                    <label class="mt-5 label-text label">Timesheet Template:</label>
+                    <button type="button" class="btn btn-primary w-[200px]" (click)="openTemplateFileExplorer()">
                         Choose File
                     </button>
                     <input
                         hidden
-                        (change)="onFileSelected($event.target)"
-                        #uploadFile
+                        (change)="onTemplateFileSelected($event.target)"
+                        #uploadTemplateFile
+                        type="file"
+                        accept=".xlsx"
+                        id="file"
+                    />
+                </div>
+                <div class="col-span-6">
+                    <label class="mt-5 label-text label">Azure Timesheet:</label>
+                    <button type="button" class="btn btn-primary w-[200px]" (click)="openAzureFileExplorer()">
+                        Choose File
+                    </button>
+                    <input
+                        hidden
+                        (change)="onAzureFileSelected($event.target)"
+                        #uploadAzureFile
                         type="file"
                         accept=".csv"
                         id="file"
