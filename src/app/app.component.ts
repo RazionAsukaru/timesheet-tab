@@ -130,12 +130,6 @@ export class AppComponent implements OnInit, AfterViewInit {
                 .subscribe({
                     next: (result: any): void => {
                         this.csvRecords = [...result];
-                        console.log(result);
-                        console.log(
-                            !!this.templateFile,
-                            this.csvRecords.length,
-                            !!this.templateFile && this.csvRecords.length
-                        );
                         if (!!this.templateFile && this.csvRecords.length) {
                             this.loadXlsx(this.templateFile);
                         }
