@@ -8,6 +8,6 @@ export class ReadFileService {
     constructor(private http: HttpClient) {}
 
     readFileFromLocal(fileName: string) {
-        return this.http.get(`app/files/${fileName}`, { responseType: 'blob'});
+        return this.http.get(`assets/files/${fileName}`, { responseType: 'blob'});
     }
 }
