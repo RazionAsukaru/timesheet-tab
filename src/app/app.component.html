@@ -1,6 +1,6 @@
 <h1 class="card-title text-center w-[100vw] justify-center pt-20">Weekly TimeSheet - TAB</h1>
 <div class="flex justify-center">
-    <form [formGroup]="timesheet" class="card w-[96%] p-10 bg-base-100 shadow-xl overflow-visible">
+    <form [formGroup]="timesheetForm" class="card w-[96%] p-10 bg-base-100 shadow-xl overflow-visible">
         <div class="card-body">
             <label for="name" class="label label-text mt-5">Name (In Eksad Timesheet):</label>
             <input id="name" type="text" formControlName="name" class="input input-primary" />
@@ -25,7 +25,7 @@
             </div>
 
             <div class="container grid grid-flow-row gap-4 sm:grid-cols-12">
-                <div class="col-span-6">
+                <!-- <div class="col-span-6">
                     <label for="datePicker" class="mt-5 label-text label">Month:</label>
                     <input
                         type="text"
@@ -34,8 +34,8 @@
                         #datePicker
                         class="input w-full input-primary"
                     />
-                </div>
-                <div class="col-span-6">
+                </div> -->
+                <div class="col-span-12">
                     <label class="mt-5 label-text label">Azure Timesheet:</label>
                     <button type="button" class="btn btn-primary w-[200px]" (click)="openFileExplorer()">
                         Choose File
@@ -61,6 +61,9 @@
                     Generate Time Sheet!
                 </button>
             </div>
+            <div *ngIf="errorMsg" class="text-error">
+                {{errorMsg}}
+            </div>
         </div>
         <div class="collapse">
             <input type="checkbox" class="peer" />
@@ -69,10 +72,14 @@
                     <h2>Treat me a coffee ☕😉</h2>
                 </div>
             </div>
-            <div class="collapse-content text-primary-content">
-                <div class="flex justify-center items-start flex-row gap-5 p-8">
-                    <img src="../assets/dana-mz.png" width="200" height="200" />
-                    <img src="../assets/bca-mz.png" width="200" height="240" />
+            <div class="collapse-content text-primary-content overflow-x-auto">
+                <div class="container grid grid-flow-row gap-4 sm:grid-cols-12 justify-center mt-5">
+                    <div class="col-span-6 m-auto">
+                        <img src="../assets/dana-mz.png" width="200" height="200" />
+                    </div>
+                    <div class="col-span-6 m-auto">
+                        <img src="../assets/bca-mz.png" width="200" height="240" />
+                    </div>
                 </div>
             </div>
         </div>

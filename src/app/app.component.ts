@@ -1,6 +1,6 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { Row, Workbook } from 'exceljs';
+import { Cell, Row, Workbook, Worksheet } from 'exceljs';
 import { NgxCsvParser, NgxCSVParserError } from 'ngx-csv-parser';
 import { BehaviorSubject } from 'rxjs';
 import { Datepicker } from 'vanillajs-datepicker';
@@ -25,21 +25,22 @@ enum Record {
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss'],
 })
-export class AppComponent implements OnInit, AfterViewInit {
+export class AppComponent implements OnInit {
     eksadFileWeek1!: File;
     eksadFileWeek2!: File;
 
     datePicker!: Datepicker;
-    timesheet!: FormGroup;
+    timesheetForm!: FormGroup;
 
     csvRecords: any = [];
     timesheetWb: Workbook | null = null;
 
     xlsxSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
 
+    errorMsg = '';
+
     @ViewChild('uploadFile', { static: true, read: ElementRef })
     uploadFileEl!: ElementRef;
-    @ViewChild('datePicker') datePickerEl!: ElementRef;
 
     constructor(
         private readFileService: ReadFileService,
@@ -47,16 +48,11 @@ export class AppComponent implements OnInit, AfterViewInit {
         private ngxCsvParser: NgxCsvParser
     ) {}
 
-    ngAfterViewInit(): void {
-        this.initiateDatePicker();
-        'Test'.toLowerCase;
-    }
-
     ngOnInit(): void {
-        this.timesheet = this.fb.group({
+        this.timesheetForm = this.fb.group({
             name: new FormControl('', Validators.required),
             week: new FormControl('1', Validators.required),
-            month: new FormControl('', Validators.required),
+            month: new FormControl<Date | null>(null, Validators.required),
         });
 
         this.readFileService.readFileFromLocal('week-1&2.xlsx').subscribe((data: Blob) => {
@@ -66,24 +62,6 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.readFileService.readFileFromLocal('week-3&4.xlsx').subscribe((data: Blob) => {
             this.eksadFileWeek2 = new File([data], 'Eksad Timesheet');
         });
-    }
-
-    initiateDatePicker() {
-        this.datePicker = new Datepicker(this.datePickerEl.nativeElement, {
-            autohide: true,
-            pickLevel: 1,
-            format: 'MM - yyyy',
-        });
-        this.datePicker.setDate([new Date()]);
-        this.timesheet.get('month')?.setValue(this.datePicker.getDate());
-    }
-
-    onDateChange({ detail }: any) {
-        this.timesheet.get('month')?.setValue(detail.date);
-        const selectedMonth = (this.timesheet.get('month')?.value as Date).getMonth();
-        if (this.csvRecords.length && new Date(this.csvRecords[0][Record.startDate]).getMonth() == selectedMonth) {
-            this.loadXlsx(this.timesheet.get('week')?.value == 1 ? this.eksadFileWeek1 : this.eksadFileWeek2);
-        }
     }
 
     openFileExplorer() {
@@ -97,38 +75,10 @@ export class AppComponent implements OnInit, AfterViewInit {
                 const ab: ArrayBuffer = e.target.result;
                 const wb = new Workbook();
                 wb.xlsx.load(ab).then((workbook: Workbook) => {
-                    const found = workbook.worksheets.find((d: any) => d.name.includes('PM Tools 1'));
-                    const sheet = workbook.getWorksheet(found ? found.id : 0);
-
-                    // Set Date
-                    const existingDate = sheet.getCell('B7').model.value as Date;
-                    const newDate = this.timesheet.get('month')?.value as Date;
-                    sheet.getCell('B7').model.value = new Date(existingDate.setMonth(newDate.getMonth()));
-
-                    sheet.eachRow((row: Row, rowIndex) => {
-                        if (rowIndex >= 7 && !!row?.model?.cells) {
-                            let temp = [];
-                            if (!!row.getCell(2).value) {
-                                const taskDate = !!row.getCell(2).result
-                                    ? (row.getCell(2).result as Date).getDate()
-                                    : (row.getCell(2).value as Date).getDate();
-                                temp = this.csvRecords.filter(
-                                    (d: any) => new Date(d[Record.startDate]).getDate() === taskDate
-                                );
-                            }
-                            temp.forEach((d: any, idx: number) => {
-                                if (!!!this.timesheet.get('name')?.value) {
-                                    this.timesheet.get('name')?.setValue(d[Record.assignedTo].split(' <')[0]);
-                                }
-                                sheet.getCell(`D${rowIndex + idx}`).value = d[Record.title];
-                                sheet.getCell(`E${rowIndex + idx}`).value = d[Record.title];
-                                sheet.getCell(`F${rowIndex + idx}`).value = 2;
-                                sheet.getCell(`G${rowIndex + idx}`).value = +d[Record.originalEstimate];
-                                sheet.getCell(`H${rowIndex + idx}`).value = +d[Record.completedWork];
-                                sheet.getCell(`I${rowIndex + idx}`).value = 1;
-                            });
-                        }
-                    });
+                    const pmTools: Worksheet | undefined = workbook.worksheets.find((d: any) =>
+                        d.name.includes('PM Tools 1')
+                    );
+                    this.processPMTools(pmTools);
                     this.timesheetWb = wb;
                 });
             };
@@ -144,11 +94,45 @@ export class AppComponent implements OnInit, AfterViewInit {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `PMtools - ${moment(this.timesheet.get('month')?.value).format('MMMM - yyyy')} - Week ${
-            this.timesheet.get('week')?.value === '1' ? '1 & 2' : '3 & 4'
-        } - ${this.timesheet.get('name')?.value}.xlsx`;
+        a.download = `PMtools - ${moment(this.timesheetForm.get('month')?.value).format('MMMM - yyyy')} - Week ${
+            this.timesheetForm.get('week')?.value === '1' ? '1 & 2' : '3 & 4'
+        } - ${this.timesheetForm.get('name')?.value}.xlsx`;
         a.click();
         a.remove();
+    }
+
+    processPMTools(pmTools: Worksheet | undefined) {
+        if (!pmTools) return;
+
+        // Set Date
+        const existingDate = pmTools.getCell('B7').model.value as Date;
+        const newDate = this.timesheetForm.get('month')?.value as Date;
+        pmTools.getCell('B7').model.value = new Date(existingDate.setMonth(newDate.getMonth()));
+
+        pmTools.eachRow((row: Row, rowIndex) => {
+            if (rowIndex >= 7 && !!row?.model?.cells) {
+                let temp = [];
+                if (!!row.getCell(2).value) {
+                    const taskDate = !!row.getCell(2).result
+                        ? (row.getCell(2).result as Date).getDate()
+                        : (row.getCell(2).value as Date).getDate();
+                    temp = this.csvRecords.filter(
+                        (d: any) => new Date(d[Record.startDate]).getDate() === taskDate
+                    );
+                }
+                temp.forEach((d: any, idx: number) => {
+                    if (!!!this.timesheetForm.get('name')?.value) {
+                        this.timesheetForm.get('name')?.setValue(d[Record.assignedTo].split(' <')[0]);
+                    }
+                    pmTools.getCell(`D${rowIndex + idx}`).value = d[Record.title];
+                    pmTools.getCell(`E${rowIndex + idx}`).value = d[Record.title];
+                    pmTools.getCell(`F${rowIndex + idx}`).value = 2;
+                    pmTools.getCell(`G${rowIndex + idx}`).value = +d[Record.originalEstimate];
+                    pmTools.getCell(`H${rowIndex + idx}`).value = +d[Record.completedWork];
+                    pmTools.getCell(`I${rowIndex + idx}`).value = 1;
+                });
+            }
+        });
     }
 
     onFileSelected({ files }: any) {
@@ -158,18 +142,14 @@ export class AppComponent implements OnInit, AfterViewInit {
                 .pipe()
                 .subscribe({
                     next: (result: any): void => {
-                        const selectedMonth = (this.timesheet.get('month')?.value as Date).getMonth();
                         this.csvRecords = result;
-                        if (new Date(result[0][Record.startDate]).getMonth() == selectedMonth) {
-                            this.loadXlsx(
-                                this.timesheet.get('week')?.value == 1 ? this.eksadFileWeek1 : this.eksadFileWeek2
-                            );
-                        } else {
-                            console.error('Wrong Month!');
-                        }
+                        this.timesheetForm.get('month')?.setValue(new Date(result[0][Record.startDate]));
+                        this.loadXlsx(
+                            this.timesheetForm.get('week')?.value == 1 ? this.eksadFileWeek1 : this.eksadFileWeek2
+                        );
                     },
                     error: (error: NgxCSVParserError): void => {
-                        console.log('Error', error);
+                        console.error('Error', error);
                     },
                 });
         }
