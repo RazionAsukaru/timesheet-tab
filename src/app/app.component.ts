@@ -2,7 +2,7 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Cell, Row, Workbook, Worksheet } from 'exceljs';
 import { NgxCsvParser, NgxCSVParserError } from 'ngx-csv-parser';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, debounceTime } from 'rxjs';
 import { Datepicker } from 'vanillajs-datepicker';
 import { ReadFileService } from './services/read-file.service';
 import * as moment from 'moment';
@@ -28,6 +28,7 @@ enum Record {
 export class AppComponent implements OnInit {
     eksadFileWeek1!: File;
     eksadFileWeek2!: File;
+    _file!: any;
 
     datePicker!: Datepicker;
     timesheetForm!: FormGroup;
@@ -46,7 +47,7 @@ export class AppComponent implements OnInit {
         private readFileService: ReadFileService,
         private fb: FormBuilder,
         private ngxCsvParser: NgxCsvParser
-    ) {}
+    ) { }
 
     ngOnInit(): void {
         this.timesheetForm = this.fb.group({
@@ -61,6 +62,9 @@ export class AppComponent implements OnInit {
 
         this.readFileService.readFileFromLocal('week-3&4.xlsx').subscribe((data: Blob) => {
             this.eksadFileWeek2 = new File([data], 'Eksad Timesheet');
+        });
+        this.timesheetForm.get('name')?.valueChanges.pipe(debounceTime(300)).subscribe(d => {
+            this.onFileSelected(this._file);
         });
     }
 
@@ -94,9 +98,8 @@ export class AppComponent implements OnInit {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `PMtools - ${moment(this.timesheetForm.get('month')?.value).format('MMMM - yyyy')} - Week ${
-            this.timesheetForm.get('week')?.value === '1' ? '1 & 2' : '3 & 4'
-        } - ${this.timesheetForm.get('name')?.value}.xlsx`;
+        a.download = `PMtools - ${moment(this.timesheetForm.get('month')?.value).format('MMMM - yyyy')} - Week ${this.timesheetForm.get('week')?.value === '1' ? '1 & 2' : '3 & 4'
+            } - ${this.timesheetForm.get('name')?.value}.xlsx`;
         a.click();
         a.remove();
     }
@@ -109,6 +112,13 @@ export class AppComponent implements OnInit {
         const newDate = this.timesheetForm.get('month')?.value as Date;
         pmTools.getCell('B7').model.value = new Date(existingDate.setMonth(newDate.getMonth()));
 
+        if (!!!this.timesheetForm.get('name')?.value) {
+            this.timesheetForm.get('name')?.setValue(this.csvRecords[0][Record.assignedTo].split(' <')[0], { emitEvent: false });
+        }
+
+        // Set Name
+        pmTools.getCell('C2').value = this.timesheetForm.get('name')?.value;
+
         pmTools.eachRow((row: Row, rowIndex) => {
             if (rowIndex >= 7 && !!row?.model?.cells) {
                 let temp = [];
@@ -120,10 +130,8 @@ export class AppComponent implements OnInit {
                         (d: any) => new Date(d[Record.startDate]).getDate() === taskDate
                     );
                 }
+
                 temp.forEach((d: any, idx: number) => {
-                    if (!!!this.timesheetForm.get('name')?.value) {
-                        this.timesheetForm.get('name')?.setValue(d[Record.assignedTo].split(' <')[0]);
-                    }
                     pmTools.getCell(`D${rowIndex + idx}`).value = d[Record.title];
                     pmTools.getCell(`E${rowIndex + idx}`).value = d[Record.title];
                     pmTools.getCell(`F${rowIndex + idx}`).value = 2;
@@ -135,7 +143,9 @@ export class AppComponent implements OnInit {
         });
     }
 
-    onFileSelected({ files }: any) {
+    onFileSelected(response: any) {
+        const { files } = response;
+        this._file = response;
         if (typeof FileReader !== 'undefined') {
             this.ngxCsvParser
                 .parse(files[0], { header: true, delimiter: ',', encoding: 'utf8' })
@@ -150,6 +160,7 @@ export class AppComponent implements OnInit {
                     },
                     error: (error: NgxCSVParserError): void => {
                         console.error('Error', error);
+                        this.timesheetWb = null;
                     },
                 });
         }
