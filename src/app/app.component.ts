@@ -119,6 +119,11 @@ export class AppComponent implements OnInit {
         // Set Name
         pmTools.getCell('C2').value = this.timesheetForm.get('name')?.value;
 
+        // Set Period
+        const mth = moment(this.timesheetForm.get('month')?.value).format('MMM');
+
+        pmTools.getCell('C4').value = (pmTools.getCell('C4').value as string).replace(/Mar/g, mth);
+
         pmTools.eachRow((row: Row, rowIndex) => {
             if (rowIndex >= 7 && !!row?.model?.cells) {
                 let temp = [];
