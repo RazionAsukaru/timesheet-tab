@@ -63,6 +63,7 @@ export class AppComponent implements OnInit {
         this.readFileService.readFileFromLocal('week-3&4.xlsx').subscribe((data: Blob) => {
             this.eksadFileWeek2 = new File([data], 'Eksad Timesheet');
         });
+
         this.timesheetForm.get('name')?.valueChanges.pipe(debounceTime(300)).subscribe(d => {
             this.onFileSelected(this._file);
         });
@@ -94,7 +95,7 @@ export class AppComponent implements OnInit {
     async exportXlsx(workbook: Workbook | null) {
         if (!workbook) return;
         const uint8Array = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([uint8Array], { type: 'application/octet-binary' });
+        const blob = new Blob([uint8Array], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
