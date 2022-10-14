@@ -63,6 +63,7 @@ export class AppComponent implements OnInit {
         this.readFileService.readFileFromLocal('week-3&4.xlsx').subscribe((data: Blob) => {
             this.eksadFileWeek2 = new File([data], 'Eksad Timesheet');
         });
+
         this.timesheetForm.get('name')?.valueChanges.pipe(debounceTime(300)).subscribe(d => {
             this.onFileSelected(this._file);
         });
@@ -94,7 +95,7 @@ export class AppComponent implements OnInit {
     async exportXlsx(workbook: Workbook | null) {
         if (!workbook) return;
         const uint8Array = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([uint8Array], { type: 'application/octet-binary' });
+        const blob = new Blob([uint8Array], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -118,6 +119,11 @@ export class AppComponent implements OnInit {
 
         // Set Name
         pmTools.getCell('C2').value = this.timesheetForm.get('name')?.value;
+
+        // Set Period
+        const mth = moment(this.timesheetForm.get('month')?.value).format('MMM');
+        
+        pmTools.getCell('C4').value = (pmTools.getCell('C4').value as string).replace(/Mar/g, mth);
 
         pmTools.eachRow((row: Row, rowIndex) => {
             if (rowIndex >= 7 && !!row?.model?.cells) {
