@@ -1,6 +1,6 @@
 # Cara menggunakan:
 1. Download timesheet dari azure
-2. Kunjungi https://muadz-askarul.web.app/
+2. Kunjungi https://tab-timesheet.web.app/
 4. Masukkan nama sesuai dengan yang ada di list file xlsx. Jika tidak diisi, maka akan menggunakan nama dari timesheet azure kolom "assign to"
 5. Generate timesheet
 
