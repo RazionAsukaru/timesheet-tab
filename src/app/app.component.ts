@@ -60,14 +60,12 @@ export class AppComponent implements OnInit {
             this.eksadFileWeek1 = new File([data], 'Eksad Timesheet');
         }, err => {
             console.error('err: ', err);
-
         });
 
         this.readFileService.readFileFromLocal('week-3&4.xlsx').subscribe((data: Blob) => {
             this.eksadFileWeek2 = new File([data], 'Eksad Timesheet');
         }, err => {
             console.error('err: ', err);
-
         });
 
         this.timesheetForm.get('name')?.valueChanges.pipe(debounceTime(300)).subscribe(d => {
