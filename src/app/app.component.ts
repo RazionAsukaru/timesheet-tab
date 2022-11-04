@@ -68,7 +68,11 @@ export class AppComponent implements OnInit {
             console.error('err: ', err);
         });
 
-        this.timesheetForm.get('name')?.valueChanges.pipe(debounceTime(300)).subscribe(d => {
+        this.name?.valueChanges.pipe(debounceTime(300)).subscribe(d => {
+            this.onFileSelected(this._file);
+        });
+
+        this.week?.valueChanges.pipe(debounceTime(300)).subscribe(d => {
             this.onFileSelected(this._file);
         });
     }
@@ -103,8 +107,8 @@ export class AppComponent implements OnInit {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `PMtools - ${moment(this.timesheetForm.get('month')?.value).format('MMMM - yyyy')} - Week ${this.timesheetForm.get('week')?.value === '1' ? '1 & 2' : '3 & 4'
-            } - ${this.timesheetForm.get('name')?.value}.xlsx`;
+        a.download = `PMtools - ${moment(this.month?.value).format('MMMM - yyyy')} - Week ${this.week?.value === '1' ? '1 & 2' : '3 & 4'
+            } - ${this.name?.value}.xlsx`;
         a.click();
         a.remove();
     }
@@ -114,18 +118,18 @@ export class AppComponent implements OnInit {
 
         // Set Date
         const existingDate = pmTools.getCell('B7').model.value as Date;
-        const newDate = this.timesheetForm.get('month')?.value as Date;
+        const newDate = this.month?.value as Date;
         pmTools.getCell('B7').model.value = new Date(existingDate.setMonth(newDate.getMonth()));
 
-        if (!!!this.timesheetForm.get('name')?.value) {
-            this.timesheetForm.get('name')?.setValue(this.csvRecords[0][Record.assignedTo].split(' <')[0], { emitEvent: false });
+        if (!!!this.name?.value) {
+            this.name?.setValue(this.csvRecords[0][Record.assignedTo].split(' <')[0], { emitEvent: false });
         }
 
         // Set Name
-        pmTools.getCell('C2').value = this.timesheetForm.get('name')?.value;
+        pmTools.getCell('C2').value = this.name?.value;
 
         // Set Period
-        const mth = moment(this.timesheetForm.get('month')?.value).format('MMM');
+        const mth = moment(this.month?.value).format('MMM');
 
         pmTools.getCell('C4').value = (pmTools.getCell('C4').value as string).replace(/Mar/g, mth);
 
@@ -163,9 +167,9 @@ export class AppComponent implements OnInit {
                 .subscribe({
                     next: (result: any): void => {
                         this.csvRecords = result;
-                        this.timesheetForm.get('month')?.setValue(new Date(result[0][Record.startDate]));
+                        this.month?.setValue(new Date(result[0][Record.startDate]));
                         this.loadXlsx(
-                            this.timesheetForm.get('week')?.value == 1 ? this.eksadFileWeek1 : this.eksadFileWeek2
+                            this.week?.value == 1 ? this.eksadFileWeek1 : this.eksadFileWeek2
                         );
                     },
                     error: (error: NgxCSVParserError): void => {
@@ -174,5 +178,15 @@ export class AppComponent implements OnInit {
                     },
                 });
         }
+    }
+
+    get week() {
+        return this.timesheetForm.get('week');
+    }
+    get month() {
+        return this.timesheetForm.get('month');
+    }
+    get name() {
+        return this.timesheetForm.get('name');
     }
 }
