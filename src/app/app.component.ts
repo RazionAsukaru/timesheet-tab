@@ -119,7 +119,7 @@ export class AppComponent implements OnInit {
         // Set Date
         const existingDate = pmTools.getCell('B7').model.value as Date;
         const newDate = this.month?.value as Date;
-        pmTools.getCell('B7').model.value = new Date(existingDate.setMonth(newDate.getMonth()));
+        pmTools.getCell('B7').model.value = new Date(existingDate.setFullYear(newDate.getFullYear(), newDate.getMonth()));
 
         if (!!!this.name?.value) {
             this.name?.setValue(this.csvRecords[0][Record.assignedTo].split(' <')[0], { emitEvent: false });
@@ -130,8 +130,9 @@ export class AppComponent implements OnInit {
 
         // Set Period
         const mth = moment(this.month?.value).format('MMM');
+        const year = moment(this.month?.value).format('YYYY');
 
-        pmTools.getCell('C4').value = (pmTools.getCell('C4').value as string).replace(/Mar/g, mth);
+        pmTools.getCell('C4').value = (pmTools.getCell('C4').value as string).replace(/Mar/g, mth).replace(/2022/g, year);
 
         pmTools.eachRow((row: Row, rowIndex) => {
             if (rowIndex >= 7 && !!row?.model?.cells) {
